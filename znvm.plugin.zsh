@@ -234,18 +234,20 @@ _set_znvm_alias_version() {
 
 _use_znvm_version() {
 	local VERSION
-	local CURRENT_PATH
 	local NODEJS_PATH
 
 	VERSION=$(_get_znvm_alias_version "$1")
+	VERSION=${VERSION:-$1}
 
-	if [ -z "$VERSION" ];then
-		echo "No $1 version found" >&2
+	NODEJS_PATH=$(_get_znvm_path_for_version "$VERSION")
+
+	if [ ! -d "$NODEJS_PATH" ];then
+		echo "$VERSION not found" >&2
 		return 1
 	fi
 
+	local CURRENT_PATH
 	CURRENT_PATH=$(_get_znvm_version)
-	NODEJS_PATH=$(_get_znvm_path_for_version "$VERSION")
 
 	if [ ! -z "$CURRENT_PATH" ];then
 		_znvm_remove_from_path "$CURRENT_PATH"
