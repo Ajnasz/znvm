@@ -10,8 +10,13 @@ _znvm_remove_from_path() {
 	path[$index]=()
 }
 
+_get_znvm_dir() {
+	echo ${ZNVM_DIR:-$HOME/.znvm}
+}
+
 _get_znvm_install_dir() {
-	echo ${ZNVM_DIR:-$HOME/.znvm/versions}
+	local _ZNVM_DIR=$(_get_znvm_dir)
+	echo $_ZNVM_DIR/versions
 }
 
 _get_znvm_installed_versions() {

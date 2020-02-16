@@ -42,6 +42,14 @@ znvm use default
 znvm hookwdchange
 ```
 
+## Configuration
+
+The `ZNVM_DIR` environment variable, default value is `$HOME/.znvm`
+
+```
+ZNVM_DIR=$HOME/.znvm
+```
+
 ## Usage
 
 ### Install a nodejs version
