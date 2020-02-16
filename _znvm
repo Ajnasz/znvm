@@ -1,0 +1,45 @@
+#compdef znvm
+#autoload
+
+local -a _1st_arguments
+_1st_arguments=(
+	'ls:list installed versions'
+	'deactivate:remove nodejs from path'
+	'activate:add default nodejs to path'
+	'use:VERSION - change active nodejs to VERSION'
+	'install:VERSION - download and install nodejs VERSION'
+	'which:VERSION - print which version matches to VERSION'
+	'alias:NAME VERSION - create VERSION alias to NAME'
+	'hookpwchange:read automatically .nvmrc when changing directory'
+)
+_znvm_submcommand() {
+	case "$words[2]" in
+		'use'|'which')
+			local -a znvm_local_versions
+			znvm_local_versions=${(f)$(znvm ls | cut -d ' ' -f 1)}
+			_alternative "versions:installed versoins:($znvm_local_versions)"
+			;;
+		'alias')
+			if (( CURRENT == 4 ));then
+				local -a znvm_local_versions
+				znvm_local_versions=${(f)$(znvm ls | cut -d ' ' -f 1)}
+				_alternative "versions:installed versions:($znvm_local_versions)"
+			fi
+			;;
+		'install')
+				local -a znvm_remote_versions
+				znvm_remote_versions=${(f)$(_get_znvm_remote_versions)}
+				_alternative "remote_versions:remote versoins:($znvm_remote_versions)"
+			;;
+	esac
+
+	return 1
+}
+
+if (( CURRENT == 2 ));then
+	_describe -t commands "znvm command" _1st_arguments
+	return
+fi
+
+
+_znvm_submcommand
