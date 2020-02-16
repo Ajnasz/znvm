@@ -280,7 +280,10 @@ _get_znvm_help() {
 
 _load_znvm_conf() {
 	# check file exists, is regular file and is readable:
-	if [ -f .nvmrc ] && [ -r .nvmrc ]; then
+	if [ -f .znvmrc ] && [ -r .znvmrc ]; then
+		local NODE_VERSION="$(cat .znvmrc)"
+		znvm use "$NODE_VERSION"
+	elif [ -f .nvmrc ] && [ -r .nvmrc ]; then
 		local NODE_VERSION="$(cat .nvmrc)"
 		znvm use "$NODE_VERSION"
 	fi
