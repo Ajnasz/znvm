@@ -274,7 +274,7 @@ _get_znvm_help() {
 	echo "$1 install VERSION - download and install nodejs VERSION" >&2
 	echo "$1 which VERSION - print which version matches to VERSION" >&2
 	echo "$1 alias NAME VERSION - create VERSION alias to NAME" >&2
-	echo "$1 hookpwchange - read automatically .nvmrc when changing directory" >&2
+	echo "$1 hookwdchange - read automatically .nvmrc when changing directory" >&2
 }
 
 
@@ -327,7 +327,7 @@ znvm() {
 		'activate')
 			_use_znvm_default_version
 			;;
-		'hookpwchange')
+		'hookwdchange')
 			_read_nvm_rc_on_pw_change
 			;;
 		'help'|'h')
