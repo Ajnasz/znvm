@@ -39,14 +39,11 @@ _get_znvm_remote_version_for() {
 
 _get_znvm_local_version_for() {
 	local VERSION
+	local ALIAS_VERSION
 
-	VERSION="$1"
+	ALIAS_VERSION=$(_get_znvm_alias_version "$1")
 
-	if [ "$VERSION" = "default" ];then
-		_get_znvm_default_version && return 0
-	fi
-
-	VERSION=$(_get_znvm_normalized_version "$VERSION")
+	VERSION=$(_get_znvm_normalized_version "${ALIAS_VERSION:-$1}")
 
 	_get_znvm_installed_versions | awk '/^d/ && $9 ~ '/^"$VERSION"/' {print $9}' | sort -V | tail -1
 }
@@ -210,12 +207,6 @@ _get_znvm_alias_version() {
 	return 0
 }
 
-_get_znvm_default_version() {
-	local VERSION
-	_get_znvm_alias_version "default"
-	return $?
-}
-
 _set_znvm_alias_version() {
 	local VERSION
 	local LOCAL_VERSION
@@ -241,16 +232,18 @@ _set_znvm_alias_version() {
 	ln -s "$LOCAL_VERSION" "$INSTALL_DIR/$ALIAS_NAME"
 }
 
-_set_znvm_default_version() {
-	_set_znvm_alias_version "default" "$2"
-}
-
 _use_znvm_version() {
 	local VERSION
 	local CURRENT_PATH
 	local NODEJS_PATH
 
-	VERSION="$1"
+	VERSION=$(_get_znvm_alias_version "$1")
+
+	if [ -z "$VERSION" ];then
+		echo "No $1 version found" >&2
+		return 1
+	fi
+
 	CURRENT_PATH=$(_get_znvm_version)
 	NODEJS_PATH=$(_get_znvm_path_for_version "$VERSION")
 
@@ -261,19 +254,6 @@ _use_znvm_version() {
 	if [ -d "$NODEJS_PATH" ];then
 		_znvm_add_to_path "$NODEJS_PATH"
 	fi
-}
-
-_use_znvm_default_version() {
-	local VERSION
-
-	VERSION=$(_get_znvm_default_version)
-
-	if [ -z "$VERSION" ];then
-		echo "No default version found" >&2
-		return 1
-	fi
-
-	_use_znvm_version "$VERSION"
 }
 
 _get_znvm_help() {
@@ -339,7 +319,7 @@ znvm() {
 			_znvm_remove_from_path "$(_get_znvm_version)"
 			;;
 		'activate')
-			_use_znvm_default_version
+			_use_znvm_version "default"
 			;;
 		'hookwdchange')
 			_read_nvm_rc_on_pw_change
