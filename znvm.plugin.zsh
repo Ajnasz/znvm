@@ -148,6 +148,11 @@ _download_znvm() {
 	if [ -d "$OUTPUT_DIR_PATH" ];then
 		rmdir "$OUTPUT_DIR_PATH"
 	fi
+
+	if [ -z "$(_get_znvm_alias_version default)" ];then
+		echo "set $DOWNLOAD_VERSION as default" >&2
+		_set_znvm_alias_version "default" "$DOWNLOAD_VERSION"
+	fi
 }
 
 _get_znvm_version() {
@@ -193,7 +198,6 @@ _get_znvm_alias_version() {
 	VERSION=$(_get_znvm_installed_versions | awk '$9 == "'"$ALIAS_VERSION"'" { print $11 }')
 
 	if [ -z "$VERSION" ];then
-		echo "No default version found" >&2
 		return 1
 	fi
 
@@ -202,7 +206,13 @@ _get_znvm_alias_version() {
 }
 
 _get_znvm_default_version() {
-	_get_znvm_alias_version "default"
+	local VERSION
+	VERSION=$(_get_znvm_alias_version "default")
+
+	if [ $? -ne 0 ];then
+		echo "No default version found" >&2
+		return 1
+	fi
 }
 
 _set_znvm_alias_version() {
