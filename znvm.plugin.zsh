@@ -212,12 +212,8 @@ _get_znvm_alias_version() {
 
 _get_znvm_default_version() {
 	local VERSION
-	VERSION=$(_get_znvm_alias_version "default")
-
-	if [ $? -ne 0 ];then
-		echo "No default version found" >&2
-		return 1
-	fi
+	_get_znvm_alias_version "default"
+	return $?
 }
 
 _set_znvm_alias_version() {
