@@ -271,15 +271,39 @@ _znvm_get_help() {
 }
 
 
-_znvm_load_conf() {
-	# check file exists, is regular file and is readable:
-	if [ -f .znvmrc ] && [ -r .znvmrc ]; then
-		local NODE_VERSION="$(cat .znvmrc)"
-		znvm use "$NODE_VERSION"
-	elif [ -f .nvmrc ] && [ -r .nvmrc ]; then
-		local NODE_VERSION="$(cat .nvmrc)"
-		znvm use "$NODE_VERSION"
+_znvm_load_conf_of() {
+	local FILE_DIR
+	local FILE_SUFFIX
+	local FILE_PATH
+
+	FILE_DIR="$1"
+
+	if [ "$FILE_DIR" = "/" ] || [ -z "$FILE_DIR" ]
+	then
+		return 1
 	fi
+
+	FILE_SUFFIX="${2}"
+
+	FILE_PATH="$FILE_DIR/$FILE_SUFFIX"
+
+	# check file exists, is regular file and is readable:
+	if [ -f "$FILE_PATH" ] && [ -r "$FILE_PATH" ]; then
+		local NODE_VERSION="$(cat $FILE_PATH)"
+		znvm use "$NODE_VERSION"
+		return 0
+	fi
+
+	_znvm_load_conf_of "$FILE_DIR:h" "$FILE_SUFFIX"
+}
+
+_znvm_load_conf() {
+	if _znvm_load_conf_of "$PWD" ".znvmrc"
+	then
+		return 0
+	fi
+
+	_znvm_load_conf_of "$PWD" ".nvmrc"
 }
 
 _read_nvm_rc_on_pw_change() {
