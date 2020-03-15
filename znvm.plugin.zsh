@@ -150,6 +150,10 @@ _znvm_download() {
 	if [ -d "$OUTPUT_DIR_PATH" ];then
 		rmdir "$OUTPUT_DIR_PATH"
 	fi
+}
+
+_znvm_install() {
+	_znvm_download "$1"
 
 	if [ -z "$(_znvm_get_alias_version default)" ];then
 		echo "set $DOWNLOAD_VERSION as default" >&2
@@ -326,7 +330,7 @@ znvm() {
 			_znvm_use_version "$1"
 			;;
 		'install')
-			_znvm_download "$1"
+			_znvm_install "$1"
 			;;
 		'ls')
 			_znvm_get_installed_versions | awk 'NF >= 9 {print $9" "$10" "$11}'
