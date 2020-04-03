@@ -1,0 +1,9 @@
+#compdef _znvm_remote_versions
+#autoload
+
+_znvm_remote_versions() {
+	compadd $(_znvm_get_remote_versions)
+}
+
+compdef _znvm_remote_versions _znvm_remote_versions
+

@@ -1,0 +1,8 @@
+#compdef _znvm_installed_versions
+#autoload
+
+_znvm_installed_versions() {
+	compadd $(znvm ls | cut -d ' ' -f 1)
+}
+
+compdef _znvm_installed_versions _znvm_installed_versions

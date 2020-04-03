@@ -15,21 +15,15 @@ _1st_arguments=(
 _znvm_submcommand() {
 	case "$words[2]" in
 		'use'|'which')
-			local -a znvm_local_versions
-			znvm_local_versions=${(f)$(znvm ls | cut -d ' ' -f 1)}
-			_alternative "versions:installed versoins:($znvm_local_versions)"
+			_alternative "versions:installed versoins:_znvm_installed_versions"
 			;;
 		'alias')
 			if (( CURRENT == 4 ));then
-				local -a znvm_local_versions
-				znvm_local_versions=${(f)$(znvm ls | cut -d ' ' -f 1)}
-				_alternative "versions:installed versions:($znvm_local_versions)"
+				_alternative "versions:installed versions:_znvm_installed_versions"
 			fi
 			;;
 		'install')
-				local -a znvm_remote_versions
-				znvm_remote_versions=${(f)$(_get_znvm_remote_versions)}
-				_alternative "remote_versions:remote versoins:($znvm_remote_versions)"
+				_alternative "remote_versions:remote versoins:_znvm_remote_versions"
 			;;
 	esac
 
