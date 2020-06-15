@@ -274,12 +274,11 @@ _znvm_get_help() {
 	echo "$1 hookwdchange - read automatically .nvmrc when changing directory"
 }
 
-
 _znvm_load_conf_of() {
 	local FILE_DIR
-	local FILE_SUFFIX
+	local FILE_NAME
 	local FILE_PATH
-
+	local FILE_NAMES
 	FILE_DIR="$1"
 
 	if [ "$FILE_DIR" = "/" ] || [ -z "$FILE_DIR" ]
@@ -287,27 +286,35 @@ _znvm_load_conf_of() {
 		return 1
 	fi
 
-	FILE_SUFFIX="${2}"
+	FILE_NAMES="$2"
 
-	FILE_PATH="$FILE_DIR/$FILE_SUFFIX"
+	for FILE_NAME in ${(s( ))FILE_NAMES};do
+		FILE_PATH="$FILE_DIR/$FILE_NAME"
 
-	# check file exists, is regular file and is readable:
-	if [ -f "$FILE_PATH" ] && [ -r "$FILE_PATH" ]; then
-		local NODE_VERSION="$(cat $FILE_PATH)"
-		znvm use "$NODE_VERSION"
-		return 0
-	fi
+		# check file exists, is regular file and is readable:
+		if [ -f "$FILE_PATH" ] && [ -r "$FILE_PATH" ]; then
+			local NODE_VERSION;
+			if [ "$FILE_NAME" = "Dockerfile" ];then
+				NODE_VERSION="$(grep 'FROM node:' Dockerfile | cut -d ':' -f 2 | cut -d '.' -f 1 | head -n 1)"
+			else
+				NODE_VERSION="$(cat $FILE_PATH)"
+			fi
 
-	_znvm_load_conf_of "$FILE_DIR:h" "$FILE_SUFFIX"
+			if [ ! -z "$NODE_VERSION" ]; then
+				znvm use "$NODE_VERSION"
+				return 0
+			fi
+		fi
+	done
+
+	_znvm_load_conf_of "$FILE_DIR:h" "$FILE_SUFFIXES"
 }
 
 _znvm_load_conf() {
-	if _znvm_load_conf_of "$PWD" ".znvmrc"
+	if _znvm_load_conf_of "$PWD" ".znvmrc .nvmrc Dockerfile"
 	then
 		return 0
 	fi
-
-	_znvm_load_conf_of "$PWD" ".nvmrc"
 }
 
 _read_nvm_rc_on_pw_change() {
