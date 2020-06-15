@@ -263,15 +263,15 @@ _znvm_use_version() {
 }
 
 _znvm_get_help() {
-	echo "Usage:" >&2
-	echo "$1 ls - list installed versions" >&2
-	echo "$1 deactivate - remove nodejs from path" >&2
-	echo "$1 activate - add default nodejs to path" >&2
-	echo "$1 use VERSION - change active nodejs to VERSION" >&2
-	echo "$1 install VERSION - download and install nodejs VERSION" >&2
-	echo "$1 which VERSION - print which version matches to VERSION" >&2
-	echo "$1 alias NAME VERSION - create VERSION alias to NAME" >&2
-	echo "$1 hookwdchange - read automatically .nvmrc when changing directory" >&2
+	echo "Usage:"
+	echo "$1 ls - list installed versions"
+	echo "$1 deactivate - remove nodejs from path"
+	echo "$1 activate - add default nodejs to path"
+	echo "$1 use VERSION - change active nodejs to VERSION"
+	echo "$1 install VERSION - download and install nodejs VERSION"
+	echo "$1 which VERSION - print which version matches to VERSION"
+	echo "$1 alias NAME VERSION - create VERSION alias to NAME"
+	echo "$1 hookwdchange - read automatically .nvmrc when changing directory"
 }
 
 
@@ -318,7 +318,7 @@ _read_nvm_rc_on_pw_change() {
 
 znvm() {
 	if [ $# -lt 1 ];then
-		_znvm_get_help "$0"
+		_znvm_get_help "$0" >&2
 		return 1
 	fi
 
@@ -358,7 +358,7 @@ znvm() {
 			_znvm_get_help "$0"
 			;;
 		*)
-			_znvm_get_help "$0"
+			_znvm_get_help "$0" >&2
 			return 1
 			;;
 	esac
