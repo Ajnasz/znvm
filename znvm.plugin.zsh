@@ -10,17 +10,12 @@ _znvm_remove_from_path() {
 	path[$index]=()
 }
 
-_znvm_get_dir() {
-	echo ${ZNVM_DIR:-$HOME/.znvm}
-}
-
 _znvm_get_install_dir() {
-	local _ZNVM_DIR=$(_znvm_get_dir)
-	echo $_ZNVM_DIR/versions
+	echo ${ZNVM_DIR:-$HOME/.znvm}/versions
 }
 
 _znvm_get_installed_versions() {
-	ls -l "$(_znvm_get_install_dir)"
+	ls --color=never -l "$(_znvm_get_install_dir)"
 }
 
 _znvm_get_remote_versions() {
@@ -245,13 +240,12 @@ _znvm_use_version() {
 
 	NODEJS_PATH=$(_znvm_get_path_for_version "$VERSION")
 
-	if [ ! -d "$NODEJS_PATH" ];then
-		echo "$VERSION not found" >&2
-		return 1
-	fi
-
 	local CURRENT_PATH
 	CURRENT_PATH=$(_znvm_get_version)
+
+	if [ "$CURRENT_PATH" = "$NODEJS_PATH" ];then
+		return 0;
+	fi
 
 	if [ ! -z "$CURRENT_PATH" ];then
 		_znvm_remove_from_path "$CURRENT_PATH"
@@ -272,6 +266,17 @@ _znvm_get_help() {
 	echo "$1 which VERSION - print which version matches to VERSION"
 	echo "$1 alias NAME VERSION - create VERSION alias to NAME"
 	echo "$1 hookwdchange - read automatically .nvmrc when changing directory"
+}
+
+_znvm_get_version_from_dockerfile() {
+	local FILE_PATH
+	FILE_PATH="$1"
+	grep 'FROM node:' $FILE_PATH | cut -d ':' -f 2 | cut -d '.' -f 1 | head -n 1
+}
+
+_znvm_get_version_from_rcfile() {
+	FILE_PATH="$1"
+	cat $FILE_PATH
 }
 
 _znvm_load_conf_of() {
@@ -295,9 +300,9 @@ _znvm_load_conf_of() {
 		if [ -f "$FILE_PATH" ] && [ -r "$FILE_PATH" ]; then
 			local NODE_VERSION;
 			if [ "$FILE_NAME" = "Dockerfile" ];then
-				NODE_VERSION="$(grep 'FROM node:' Dockerfile | cut -d ':' -f 2 | cut -d '.' -f 1 | head -n 1)"
+				NODE_VERSION="$(_znvm_get_version_from_dockerfile $FILE_PATH)"
 			else
-				NODE_VERSION="$(cat $FILE_PATH)"
+				NODE_VERSION="$(_znvm_get_version_from_rcfile $FILE_PATH)"
 			fi
 
 			if [ ! -z "$NODE_VERSION" ]; then
