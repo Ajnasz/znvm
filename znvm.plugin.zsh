@@ -231,21 +231,67 @@ _znvm_set_alias_version() {
 	ln -s "$LOCAL_VERSION" "$INSTALL_DIR/$ALIAS_NAME"
 }
 
+_znvm_find_closest_upper_version() {
+	local VERSION
+	local CUT_VERSION
+	local FOUND_VERSION
+
+	VERSION="$1"
+
+	FOUND_VERSION=$(znvm ls | awk '{ if (NF > 1) { print $3 } else { print $1 } }' | sort -V | uniq | grep "^v\?$VERSION" | tail -1)
+	if [ -z "$FOUND_VERSION" ]
+	then
+		CUT_VERSION=${VERSION%.*}
+
+		if [ "$CUT_VERSION" = "$VERSION" ]
+		then
+			return 1
+		fi
+
+		_znvm_find_closest_upper_version "$CUT_VERSION"
+		return $?
+	fi
+
+	echo $FOUND_VERSION
+	return 0
+}
+
 _znvm_use_version() {
 	local VERSION
+	local ALIAS_VERSION
+	local CLOSEST_VERSION
 	local NODEJS_PATH
 
-	VERSION=$(_znvm_get_alias_version "$1")
-	VERSION=${VERSION:-$1}
+	ALIAS_VERSION=$(_znvm_get_alias_version "$1")
+	CLOSEST_VERSION=$(_znvm_find_closest_upper_version "${ALIAS_VERSION:-$1}")
+	if [ ! -z "$CLOSEST_VERSION" ]
+	then
+		local isclosest
+		isclosest=0
+
+		if [ ! -z "$ALIAS_VERSION" ] && ! echo "$CLOSEST_VERSION" | grep -q "^v\?$ALIAS_VERSION"
+		then
+			isclosest=1
+		fi
+
+		if [ $isclosest -eq 1 ] || [ -z "$ALIAS_VERSION" ] && ! echo "$CLOSEST_VERSION" | grep -q "^v\?$1"
+		then
+			echo "Warning: Using version $CLOSEST_VERSION for $1" >&2
+		fi
+	fi
+
+	VERSION=${CLOSEST_VERSION:-$1}
+
 
 	NODEJS_PATH=$(_znvm_get_path_for_version "$VERSION")
 
+	if [ ! -d "$NODEJS_PATH" ];then
+		echo "$VERSION not found" >&2
+		return 1
+	fi
+
 	local CURRENT_PATH
 	CURRENT_PATH=$(_znvm_get_version)
-
-	if [ "$CURRENT_PATH" = "$NODEJS_PATH" ];then
-		return 0;
-	fi
 
 	if [ ! -z "$CURRENT_PATH" ];then
 		_znvm_remove_from_path "$CURRENT_PATH"
