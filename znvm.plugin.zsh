@@ -239,21 +239,21 @@ _znvm_find_closest_upper_version() {
 	VERSION="$1"
 
 	FOUND_VERSION=$(znvm ls | awk '{ if (NF > 1) { print $3 } else { print $1 } }' | sort -V | uniq | grep "^v\?$VERSION" | tail -1)
-	if [ -z "$FOUND_VERSION" ]
+
+	if [ -n "$FOUND_VERSION" ]
 	then
-		CUT_VERSION=${VERSION%.*}
-
-		if [ "$CUT_VERSION" = "$VERSION" ]
-		then
-			return 1
-		fi
-
-		_znvm_find_closest_upper_version "$CUT_VERSION"
-		return $?
+		echo $FOUND_VERSION
+		return 0
 	fi
 
-	echo $FOUND_VERSION
-	return 0
+	CUT_VERSION=${VERSION%.*}
+
+	if [ "$CUT_VERSION" = "$VERSION" ]
+	then
+		return 1
+	fi
+
+	_znvm_find_closest_upper_version "$CUT_VERSION"
 }
 
 _znvm_use_version() {
