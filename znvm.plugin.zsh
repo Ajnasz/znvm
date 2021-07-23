@@ -237,10 +237,12 @@ _znvm_find_closest_upper_version() {
 	local VERSION
 	local CUT_VERSION
 	local FOUND_VERSION
+	local EXISTING_VERSIONS
 
 	VERSION="$1"
+	EXISTING_VERSIONS="${2:-$(znvm ls | awk '{ if (NF == 3) { print $3 } else { print $1 } }' | sort -V | uniq)}"
 
-	FOUND_VERSION=$(znvm ls | awk '{ if (NF > 1) { print $3 } else { print $1 } }' | sort -V | uniq | grep "^v\?$VERSION" | tail -1)
+	FOUND_VERSION=$(echo $EXISTING_VERSIONS | grep "^v\?$VERSION" | tail -1)
 
 	if [ -n "$FOUND_VERSION" ]
 	then
@@ -255,7 +257,7 @@ _znvm_find_closest_upper_version() {
 		return 1
 	fi
 
-	_znvm_find_closest_upper_version "$CUT_VERSION"
+	_znvm_find_closest_upper_version "$CUT_VERSION" "$EXISTING_VERSIONS"
 }
 
 _znvm_use_version() {
