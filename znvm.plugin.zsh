@@ -265,27 +265,30 @@ _znvm_use_version() {
 	local ALIAS_VERSION
 	local CLOSEST_VERSION
 	local NODEJS_PATH
+	local WANTED_VERSION
+	local RESOLVED_VERSION
 
-	ALIAS_VERSION=$(_znvm_get_alias_version "$1")
-	CLOSEST_VERSION=$(_znvm_find_closest_upper_version "${ALIAS_VERSION:-$1}")
-	if [ ! -z "$CLOSEST_VERSION" ]
+	WANTED_VERSION="$1"
+
+	ALIAS_VERSION=$(_znvm_get_alias_version "$WANTED_VERSION")
+	RESOLVED_VERSION="${ALIAS_VERSION:-$WANTED_VERSION}"
+
+	# prefix the version with a "v"
+	if [ ! -z  "${RESOLVED_VERSION##v*}" ]
 	then
-		local isclosest
-		isclosest=0
+		RESOLVED_VERSION="v$RESOLVED_VERSION"
+	fi
 
-		if [ ! -z "$ALIAS_VERSION" ] && ! echo "$CLOSEST_VERSION" | grep -q "^v\?$ALIAS_VERSION"
+	CLOSEST_VERSION=$(_znvm_find_closest_upper_version "${RESOLVED_VERSION}")
+	if [ -n "$CLOSEST_VERSION" ]
+	then
+		if [ "$RESOLVED_VERSION" != "$CLOSEST_VERSION" ]
 		then
-			isclosest=1
-		fi
-
-		if [ $isclosest -eq 1 ] || [ -z "$ALIAS_VERSION" ] && ! echo "$CLOSEST_VERSION" | grep -q "^v\?$1"
-		then
-			echo "Warning: Using version $CLOSEST_VERSION for $1" >&2
+			echo "Warning: Using version $CLOSEST_VERSION for $WANTED_VERSION" >&2
 		fi
 	fi
 
-	VERSION=${CLOSEST_VERSION:-$1}
-
+	VERSION=${CLOSEST_VERSION:-$RESOLVED_VERSION}
 
 	NODEJS_PATH=$(_znvm_get_path_for_version "$VERSION")
 
@@ -296,6 +299,10 @@ _znvm_use_version() {
 
 	local CURRENT_PATH
 	CURRENT_PATH=$(_znvm_get_version)
+
+	if [ "$CURRENT_PATH" = "$NODEJS_PATH" ];then
+		return 0
+	fi
 
 	if [ ! -z "$CURRENT_PATH" ];then
 		_znvm_remove_from_path "$CURRENT_PATH"
