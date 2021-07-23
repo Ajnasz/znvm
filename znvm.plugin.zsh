@@ -35,10 +35,12 @@ _znvm_get_remote_version_for() {
 _znvm_get_local_version_for() {
 	local VERSION
 	local ALIAS_VERSION
+	local WANTED_VERSION
+	WANTED_VERSION="$1"
 
-	ALIAS_VERSION=$(_znvm_get_alias_version "$1")
+	ALIAS_VERSION=$(_znvm_get_alias_version "$WANTED_VERSION")
 
-	VERSION=$(_znvm_get_normalized_version "${ALIAS_VERSION:-$1}")
+	VERSION=$(_znvm_get_normalized_version "${ALIAS_VERSION:-$WANTED_VERSION}")
 
 	_znvm_get_installed_versions | awk '/^d/ && $9 ~ '/^"$VERSION"/' {print $9}' | sort -V | tail -1
 }
