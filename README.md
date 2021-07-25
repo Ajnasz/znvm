@@ -28,6 +28,19 @@ fi
 znvm hookwdchange
 ```
 
+#### Dependencies
+
+You shell must be [zsh](https://www.zsh.org/)
+
+The following commands also needed for operation:
+- `curl`
+- `awk`
+- `tail`
+- `head`
+- `cut`
+- `sort`
+- `uniq`
+
 ### Install in oh-my-zsh
 
 ```bash
