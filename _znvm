@@ -9,6 +9,7 @@ _1st_arguments=(
 	'use:VERSION - change active nodejs to VERSION'
 	'install:VERSION - download and install nodejs VERSION'
 	'which:VERSION - print which version matches to VERSION'
+	'current:print currently active version'
 	'alias:NAME VERSION - create VERSION alias to NAME'
 	'hookpwchange:read automatically .nvmrc when changing directory'
 )

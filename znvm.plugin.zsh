@@ -169,6 +169,21 @@ _znvm_get_version() {
 		echo $MATCH
 		return 0
 	fi
+
+	return 1
+}
+
+_znvm_get_version_from_path() {
+	# /home/foo/.znvm/versions/v1.2.3/bin
+	local VERSION_PATH
+	VERSION_PATH="$1"
+
+	# remove the install path
+	VERSION_PATH="${VERSION_PATH##$(_znvm_get_install_dir)}"
+	# remove leading /
+	VERSION_PATH="${VERSION_PATH#/}"
+	# remove every subdirectories of the version string (v1.2.3/bin)
+	echo ${VERSION_PATH%%/*}
 }
 
 _znvm_get_normalized_version() {
@@ -322,6 +337,7 @@ _znvm_get_help() {
 	echo "$1 install VERSION - download and install nodejs VERSION"
 	echo "$1 which VERSION - print which version matches to VERSION"
 	echo "$1 alias NAME VERSION - create VERSION alias to NAME"
+	echo "$1 current - get the activated version"
 	echo "$1 hookwdchange - read automatically .nvmrc when changing directory"
 }
 
@@ -419,6 +435,15 @@ znvm() {
 			;;
 		'activate')
 			_znvm_use_version "default"
+			;;
+		'current')
+			local current_version
+			current_version="$(_znvm_get_version)"
+			if [ $? -ne 0 ]
+			then
+				return 1
+			fi
+			_znvm_get_version_from_path "$current_version"
 			;;
 		'hookwdchange')
 			_read_nvm_rc_on_pw_change
