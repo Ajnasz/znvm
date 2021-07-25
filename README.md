@@ -18,7 +18,12 @@ Edit you .zshrc and the following line to enable the plugin:
 # enable autocompletion for znvm
 fpath+=$HOME/src/znvm
 # load default nodejs version
-znvm use default
+# but only if it's not set (for example it will be set if you use tmux)
+# remove the if statement if you want to make sure the default version used in a new shell
+if ! znvm current > /dev/null
+then
+	znvm use default
+fi
 # load version defined in .nvmrc
 znvm hookwdchange
 ```
@@ -86,6 +91,7 @@ znvm use default
 
 ### Autoload version which is defined in `.nvmrc`
 
+Add the following line to the .zshrc
 ```bash
 znvm hookwdchange
 ```
