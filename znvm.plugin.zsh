@@ -27,7 +27,7 @@ _znvm_get_remote_version_for() {
 	EXPECTED_VERSION=$(_znvm_get_normalized_version "$1")
 
 	local REMOTE_VERSION
-	REMOTE_VERSION=$(_znvm_get_remote_versions | grep "^$EXPECTED_VERSION" | tail -1)
+	REMOTE_VERSION=$(_znvm_get_remote_versions | awk '/^'"$EXPECTED_VERSION"'/ { a=$0 } END { print a }')
 
 	echo "$REMOTE_VERSION"
 }
@@ -42,7 +42,7 @@ _znvm_get_local_version_for() {
 	local VERSION
 	VERSION=$(_znvm_get_normalized_version "${ALIAS_VERSION:-$WANTED_VERSION}")
 
-	_znvm_get_installed_versions | awk '/^d/ && $9 ~ '/^"$VERSION"/' {print $9}' | sort -V | tail -1
+	_znvm_get_installed_versions | awk '/^d/ && $9 ~ /^'"$VERSION"'/ {print $9}' | sort -V | tail -1
 }
 
 _znvm_get_download_output_path() {
@@ -95,7 +95,8 @@ _znvm_download_version() {
 	local REMOTE_URL
 	REMOTE_URL="https://nodejs.org/dist/$DOWNLOAD_VERSION/node-$DOWNLOAD_VERSION-$OS-$ARCH.tar.xz"
 
-	if ! curl "$REMOTE_URL" -# -o "$OUTPUT_PATH";then
+	if ! curl "$REMOTE_URL" --progress-bar -o "$OUTPUT_PATH"
+	then
 		return 1
 	fi
 }
@@ -123,7 +124,8 @@ _znvm_download() {
 	local OUTPUT_PATH
 	OUTPUT_PATH=$(_znvm_get_download_output_path "$DOWNLOAD_VERSION")
 
-	if ! _znvm_download_version "$DOWNLOAD_VERSION" "$OUTPUT_PATH";then
+	if ! _znvm_download_version "$DOWNLOAD_VERSION" "$OUTPUT_PATH"
+	then
 		echo "Download failed" >&2
 		local OUTPUT_DIR_PATH
 		OUTPUT_DIR_PATH=$(dirname "$OUTPUT_PATH")
@@ -136,27 +138,31 @@ _znvm_download() {
 
 	_znvm_extract "$OUTPUT_PATH" "$DESTINATION_DIRECTORY"
 
-	if [ -f "$OUTPUT_PATH" ];then
+	if [ -f "$OUTPUT_PATH" ]
+	then
 		rm "$OUTPUT_PATH"
 	fi
 
 	local OUTPUT_DIR_PATH
 	OUTPUT_DIR_PATH=$(dirname "$OUTPUT_PATH")
 
-	if [ -d "$OUTPUT_DIR_PATH" ];then
+	if [ -d "$OUTPUT_DIR_PATH" ]
+	then
 		rmdir "$OUTPUT_DIR_PATH"
 	fi
 }
 
 _znvm_install() {
-	if [ $# -ne 1 ];then
+	if [ $# -ne 1 ]
+	then
 		echo "Version is mandantory" >&2
 		return 1
 	fi
 
 	_znvm_download "$1"
 
-	if [ -z "$(_znvm_get_alias_version default)" ];then
+	if [ -z "$(_znvm_get_alias_version default)" ]
+	then
 		echo "set $DOWNLOAD_VERSION as default" >&2
 		_znvm_set_alias_version "default" "$DOWNLOAD_VERSION"
 	fi
@@ -171,7 +177,8 @@ _znvm_get_version() {
 	local MATCH
 	MATCH=$path[(r)$INSTALL_DIR*]
 
-	if [ ! -z "$MATCH" ];then
+	if [ ! -z "$MATCH" ]
+	then
 		echo $MATCH
 		return 0
 	fi
@@ -199,7 +206,8 @@ _znvm_get_normalized_version() {
 	local EXPECTED_VERSION
 	EXPECTED_VERSION="$VERSION"
 
-	if [ -n "${EXPECTED_VERSION##v*}" ];then
+	if [ -n "${EXPECTED_VERSION##v*}" ]
+	then
 		EXPECTED_VERSION="v$EXPECTED_VERSION"
 	fi
 
@@ -223,7 +231,8 @@ _znvm_get_alias_version() {
 	local VERSION
 	VERSION=$(_znvm_get_installed_versions | awk '$9 == "'"$ALIAS_VERSION"'" { print $11 }')
 
-	if [ -z "$VERSION" ];then
+	if [ -z "$VERSION" ]
+	then
 		return 1
 	fi
 
@@ -241,7 +250,8 @@ _znvm_set_alias_version() {
 	local LOCAL_VERSION
 	LOCAL_VERSION=$(_znvm_get_local_version_for "$VERSION")
 
-	if [ -z "$LOCAL_VERSION" ];then
+	if [ -z "$LOCAL_VERSION" ]
+	then
 		echo "No local version found" >&2
 		return 1
 	fi
@@ -249,7 +259,8 @@ _znvm_set_alias_version() {
 	local INSTALL_DIR
 	INSTALL_DIR="$(_znvm_get_install_dir)"
 
-	if [ -L "$INSTALL_DIR/$ALIAS_NAME" ];then
+	if [ -L "$INSTALL_DIR/$ALIAS_NAME" ]
+	then
 		rm -f "$INSTALL_DIR/$ALIAS_NAME"
 	fi
 
@@ -264,7 +275,7 @@ _znvm_find_closest_upper_version() {
 	EXISTING_VERSIONS="${2:-$(znvm ls | awk '{ if (NF == 3) { print $3 } else { print $1 } }' | sort -V | uniq)}"
 
 	local FOUND_VERSION
-	FOUND_VERSION=$(echo $EXISTING_VERSIONS | grep "^v\?$VERSION" | tail -1)
+	FOUND_VERSION=$(echo $EXISTING_VERSIONS | awk '/^v?'"$VERSION"'/ { a=$1 } END { print a }')
 
 	if [ -n "$FOUND_VERSION" ]
 	then
@@ -359,7 +370,7 @@ _znvm_get_help() {
 _znvm_get_version_from_dockerfile() {
 	local FILE_PATH
 	FILE_PATH="$1"
-	grep 'FROM node:' $FILE_PATH | cut -d ':' -f 2 | cut -d '.' -f 1 | head -n 1
+	awk '/FROM node:/' $FILE_PATH | cut -d ':' -f 2 | cut -d '.' -f 1 | head -n 1
 }
 
 _znvm_get_version_from_rcfile() {
@@ -428,7 +439,8 @@ _read_nvm_rc_on_pw_change() {
 }
 
 znvm() {
-	if [ $# -lt 1 ];then
+	if [ $# -lt 1 ]
+	then
 		_znvm_get_help "$0" >&2
 		return 1
 	fi
@@ -448,7 +460,8 @@ znvm() {
 			_znvm_get_installed_versions | awk 'NF >= 9 {print $9" "$10" "$11}'
 			;;
 		'which')
-			if [ $# -lt 1 ];then
+			if [ $# -lt 1 ]
+			then
 				echo "Version is mandantory" >&2
 				return 1
 			fi
