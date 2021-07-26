@@ -363,7 +363,7 @@ _znvm_get_help() {
 	echo "$1 ls - list installed versions"
 	echo "$1 deactivate - remove nodejs from path"
 	echo "$1 activate - add default nodejs to path"
-	echo "$1 use VERSION - change active nodejs to VERSION"
+	echo "$1 use [VERSION] - change active nodejs to VERSION. If VERSION omitted, load version from \$ZNVM_SEARCH_FILENAMES"
 	echo "$1 install VERSION - download and install nodejs VERSION"
 	echo "$1 which VERSION - print which version matches to VERSION"
 	echo "$1 alias NAME VERSION - create VERSION alias to NAME"
@@ -455,7 +455,16 @@ znvm() {
 
 	case "$COMMAND" in
 		'use')
-			_znvm_use_version "$1"
+			if [ $# -eq 1 ]
+			then
+				_znvm_use_version "$1"
+			elif [ $# -eq 0 ]
+			then
+				_znvm_load_conf
+			else
+				_znvm_get_help "$0" >&2
+				return 1
+			fi
 			;;
 		'install')
 			_znvm_install "$1"
