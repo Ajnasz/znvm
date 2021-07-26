@@ -14,6 +14,10 @@ _znvm_get_install_dir() {
 	echo ${ZNVM_DIR:-$HOME/.znvm}/versions
 }
 
+_znvm_get_hook_search_filenames() {
+	echo ${ZNVM_SEARCH_FILENAMES:-.znvmrc .nvmrc Dockerfile}
+}
+
 _znvm_get_installed_versions() {
 	ls --color=never -l "$(_znvm_get_install_dir)"
 }
@@ -424,7 +428,7 @@ _znvm_load_conf_of() {
 }
 
 _znvm_load_conf() {
-	if _znvm_load_conf_of "$PWD" ".znvmrc .nvmrc Dockerfile"
+	if _znvm_load_conf_of "$PWD" "$(_znvm_get_hook_search_filenames)"
 	then
 		return 0
 	fi

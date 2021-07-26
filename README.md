@@ -4,6 +4,19 @@ Similar to [nvm-sh](https://github.com/nvm-sh/nvm) but meant to be faster (on st
 
 ## Install
 
+### Dependencies
+
+You shell must be [zsh](https://www.zsh.org/)
+
+The following commands also needed for operation:
+- `curl`
+- `awk`
+- `tail`
+- `head`
+- `cut`
+- `sort`
+- `uniq`
+
 ### General installation
 
 ```
@@ -27,19 +40,6 @@ fi
 # load version defined in .nvmrc
 znvm hookwdchange
 ```
-
-#### Dependencies
-
-You shell must be [zsh](https://www.zsh.org/)
-
-The following commands also needed for operation:
-- `curl`
-- `awk`
-- `tail`
-- `head`
-- `cut`
-- `sort`
-- `uniq`
 
 ### Install in oh-my-zsh
 
@@ -65,9 +65,16 @@ znvm hookwdchange
 The `ZNVM_DIR` environment variable, default value is `$HOME/.znvm`
 
 ```
-ZNVM_DIR=$HOME/.znvm
+ZNVM_DIR="$HOME/.znvm"
 ```
 
+The `ZNVM_SEARCH_FILENAMES` environment variable is a list of filenames (separated by space) znvm will look for whenever it executes the `chpwd` hook listener. Default value is `.znvmrc .nvmrc Dockerfile`
+
+To disable Dockerfile read remove it from the list:
+
+```
+ZNVM_SEARCH_FILENAMES=".znvmrc .nvmrc"
+```
 ## Usage
 
 ### Install a nodejs version
@@ -102,9 +109,14 @@ Use a default version
 znvm use default
 ```
 
-### Autoload version which is defined in `.nvmrc`
+### Auto use from `.znvmrc`, `.nvmrc` or `Dockerfile`
 
 Add the following line to the .zshrc
+
 ```bash
 znvm hookwdchange
 ```
+
+That will add a hook, which executes every time you change directory. The hook listener will search `.znvmrc`, `.nvmrc` and `Dockerfile` in the directory you entered to. If no file found, it will try to find it in the parent directory until it reaches the root directory.
+
+When it searches in a `Dockerfile`, it will try to extract the version number from `FROM node:` line.
