@@ -313,11 +313,12 @@ _znvm_use_version() {
 	local CLOSEST_VERSION
 	CLOSEST_VERSION=$(_znvm_find_closest_upper_version "${RESOLVED_VERSION}")
 
+	local CLOSEST_VERSION_WARNING=0
 	if [ -n "$CLOSEST_VERSION" ]
 	then
 		if [ "$RESOLVED_VERSION" != "$CLOSEST_VERSION" ]
 		then
-			echo "Warning: Using version $CLOSEST_VERSION for $WANTED_VERSION" >&2
+			CLOSEST_VERSION_WARNING=1
 		fi
 	fi
 
@@ -346,6 +347,10 @@ _znvm_use_version() {
 		_znvm_remove_from_path "$CURRENT_PATH"
 	fi
 
+	if [ $closest_version_warning -eq 1 ]
+	then
+		echo "Warning: Using version $CLOSEST_VERSION for $WANTED_VERSION" >&2
+	fi
 	if [ -d "$NODEJS_PATH" ]
 	then
 		_znvm_add_to_path "$NODEJS_PATH"
