@@ -49,7 +49,7 @@ _znvm_get_local_version_for() {
 	_znvm_get_installed_versions | awk '/^d/ && $9 ~ /^'"$version"'/ {print $9}' | sort -V | tail -1
 }
 
-_znmv_get_download_dir() {
+_znvm_get_download_dir() {
 	mktemp -d
 }
 
@@ -58,7 +58,7 @@ _znvm_get_download_output_path() {
 	download_version="$1"
 
 	local tmp_dir
-	tmp_dir="$(_znmv_get_download_dir)"
+	tmp_dir="$(_znvm_get_download_dir)"
 
 	local output_name
 	output_name="node-$download_version.tar.xz"
@@ -70,40 +70,40 @@ _znvm_get_download_output_path() {
 }
 
 _znvm_download_version() {
-	local DOWNLOAD_VERSION
-	DOWNLOAD_VERSION="$1"
+	local download_version
+	download_version="$1"
 
-	local OUTPUT_PATH
-	OUTPUT_PATH="$2"
+	local output_path
+	output_path="$2"
 
-	local ARCH
-	ARCH=""
+	local arch
+	arch=""
 
-	local OS
-	OS=""
+	local os
+	os=""
 
 	case "$(uname -m)" in
 		"x86_64")
-			ARCH="x64"
+			arch="x64"
 			;;
 		"armv7l")
-			ARCH="armv7l"
+			arch="armv7l"
 			;;
 	esac
 
 	case "$(uname -s)" in
 		"Linux")
-			OS="linux"
+			os="linux"
 			;;
 		"Darwin")
-			OS="osx"
+			os="osx"
 			;;
 	esac
 
-	local REMOTE_URL
-	REMOTE_URL="https://nodejs.org/dist/$DOWNLOAD_VERSION/node-$DOWNLOAD_VERSION-$OS-$ARCH.tar.xz"
+	local remote_url
+	remote_url="https://nodejs.org/dist/$download_version/node-$download_version-$os-$arch.tar.xz"
 
-	if ! curl "$REMOTE_URL" --progress-bar -o "$OUTPUT_PATH"
+	if ! curl "$remote_url" --progress-bar -o "$output_path"
 	then
 		return 1
 	fi
@@ -111,52 +111,52 @@ _znvm_download_version() {
 
 _znvm_extract() {
 
-	local NODEJS_XZ_PATH
-	NODEJS_XZ_PATH="$1"
+	local nodejs_xz_path
+	nodejs_xz_path="$1"
 
-	local DESTINATION_DIRECTORY
-	DESTINATION_DIRECTORY="$2"
+	local destination_directory
+	destination_directory="$2"
 
-	mkdir -p "$DESTINATION_DIRECTORY"
+	mkdir -p "$destination_directory"
 
-	tar xJf "$NODEJS_XZ_PATH" --strip-components=1 -C "$DESTINATION_DIRECTORY"
+	tar xJf "$nodejs_xz_path" --strip-components=1 -C "$destination_directory"
 }
 
 _znvm_download() {
-	local EXPECTED_VERSION
-	EXPECTED_VERSION="$1"
+	local expected_version
+	expected_version="$1"
 
-	local DOWNLOAD_VERSION
-	DOWNLOAD_VERSION=$(_znvm_get_remote_version_for "$EXPECTED_VERSION")
+	local download_version
+	download_version=$(_znvm_get_remote_version_for "$expected_version")
 
-	local OUTPUT_PATH
-	OUTPUT_PATH=$(_znvm_get_download_output_path "$DOWNLOAD_VERSION")
+	local output_path
+	output_path=$(_znvm_get_download_output_path "$download_version")
 
-	if ! _znvm_download_version "$DOWNLOAD_VERSION" "$OUTPUT_PATH"
+	if ! _znvm_download_version "$download_version" "$output_path"
 	then
 		echo "Download failed" >&2
-		local OUTPUT_DIR_PATH
-		OUTPUT_DIR_PATH=$(dirname "$OUTPUT_PATH")
-		rmdir "$OUTPUT_DIR_PATH"
+		local output_dir_path
+		output_dir_path=$(dirname "$output_path")
+		rmdir "$output_dir_path"
 		return 1
 	fi
 
-	local DESTINATION_DIRECTORY
-	DESTINATION_DIRECTORY="$(_znvm_get_install_dir)/$DOWNLOAD_VERSION"
+	local destination_directory
+	destination_directory="$(_znvm_get_install_dir)/$download_version"
 
-	_znvm_extract "$OUTPUT_PATH" "$DESTINATION_DIRECTORY"
+	_znvm_extract "$output_path" "$destination_directory"
 
-	if [ -f "$OUTPUT_PATH" ]
+	if [ -f "$output_path" ]
 	then
-		rm "$OUTPUT_PATH"
+		rm "$output_path"
 	fi
 
-	local OUTPUT_DIR_PATH
-	OUTPUT_DIR_PATH=$(dirname "$OUTPUT_PATH")
+	local output_dir_path
+	output_dir_path=$(dirname "$output_path")
 
-	if [ -d "$OUTPUT_DIR_PATH" ]
+	if [ -d "$output_dir_path" ]
 	then
-		rmdir "$OUTPUT_DIR_PATH"
+		rmdir "$output_dir_path"
 	fi
 }
 
@@ -223,83 +223,83 @@ _znvm_get_normalized_version() {
 }
 
 _znvm_get_path_for_version() {
-	local VERSION
-	VERSION="$1"
+	local Version
+	version="$1"
 
-	local LOCAL_VERSION
-	LOCAL_VERSION="$(_znvm_get_local_version_for "$VERSION")"
+	local local_version
+	local_version="$(_znvm_get_local_version_for "$version")"
 
-	echo "$(_znvm_get_install_dir)/$LOCAL_VERSION/bin"
+	echo "$(_znvm_get_install_dir)/$local_version/bin"
 }
 
 _znvm_get_alias_version() {
-	local ALIAS_VERSION
-	ALIAS_VERSION="$1"
+	local alias_version
+	alias_version="$1"
 
-	local VERSION
-	VERSION=$(_znvm_get_installed_versions | awk '$9 == "'"$ALIAS_VERSION"'" { print $11 }')
+	local version
+	version=$(_znvm_get_installed_versions | awk '$9 == "'"$alias_version"'" { print $11 }')
 
-	if [ -z "$VERSION" ]
+	if [ -z "$version" ]
 	then
-		return 1
+		return 0
 	fi
 
-	echo "$VERSION"
+	echo "$version"
 	return 0
 }
 
 _znvm_set_alias_version() {
-	local ALIAS_NAME
-	ALIAS_NAME="$1"
+	local alias_name
+	alias_name="$1"
 
-	local VERSION
-	VERSION="$2"
+	local version
+	version="$2"
 
-	local LOCAL_VERSION
-	LOCAL_VERSION=$(_znvm_get_local_version_for "$VERSION")
+	local local_version
+	local_version=$(_znvm_get_local_version_for "$version")
 
-	if [ -z "$LOCAL_VERSION" ]
+	if [ -z "$local_version" ]
 	then
 		echo "No local version found" >&2
 		return 1
 	fi
 
-	local INSTALL_DIR
-	INSTALL_DIR="$(_znvm_get_install_dir)"
+	local install_dir
+	install_dir="$(_znvm_get_install_dir)"
 
-	if [ -L "$INSTALL_DIR/$ALIAS_NAME" ]
+	if [ -L "$install_dir/$alias_name" ]
 	then
-		rm -f "$INSTALL_DIR/$ALIAS_NAME"
+		rm -f "$install_dir/$alias_name"
 	fi
 
-	ln -s "$LOCAL_VERSION" "$INSTALL_DIR/$ALIAS_NAME"
+	ln -s "$local_version" "$install_dir/$alias_name"
 }
 
 _znvm_find_closest_upper_version() {
-	local VERSION
-	VERSION="$1"
+	local version
+	version="$1"
 
-	local EXISTING_VERSIONS
-	EXISTING_VERSIONS="${2:-$(znvm ls | awk '{ if (NF == 3) { print $3 } else { print $1 } }' | sort -V | uniq)}"
+	local existing_versions
+	existing_versions="${2:-$(znvm ls | awk '{ if (NF == 3) { print $3 } else { print $1 } }' | sort -V | uniq)}"
 
-	local FOUND_VERSION
-	FOUND_VERSION=$(echo $EXISTING_VERSIONS | awk '/^v?'"$VERSION"'/ { a=$1 } END { print a }')
+	local found_version
+	found_version=$(echo $existing_versions | awk '/^v?'"$version"'/ { a=$1 } END { print a }')
 
-	if [ -n "$FOUND_VERSION" ]
+	if [ -n "$found_version" ]
 	then
-		echo $FOUND_VERSION
+		echo -n $found_version
 		return 0
 	fi
 
-	local CUT_VERSION
-	CUT_VERSION=${VERSION%.*}
+	local cut_version
+	cut_version=${version%.*}
 
-	if [ "$CUT_VERSION" = "$VERSION" ]
+	if [ "$cut_version" = "$version" ]
 	then
 		return 1
 	fi
 
-	_znvm_find_closest_upper_version "$CUT_VERSION" "$EXISTING_VERSIONS"
+	_znvm_find_closest_upper_version "$cut_version" "$existing_versions"
 }
 
 _znvm_use_version() {
@@ -357,7 +357,7 @@ _znvm_use_version() {
 
 	if [ $closest_version_warning -eq 1 ]
 	then
-		echo "Warning: Using version $closest_version for $WANTED_VERSION" >&2
+		echo "using version $closest_version for $wanted_version" >&2
 	fi
 	if [ -d "$nodejs_path" ]
 	then
@@ -381,59 +381,59 @@ _znvm_get_help() {
 }
 
 _znvm_get_version_from_dockerfile() {
-	local FILE_PATH
-	FILE_PATH="$1"
-	awk '/FROM node:/' $FILE_PATH | cut -d ':' -f 2 | cut -d '.' -f 1 | head -n 1
+	local file_path
+	file_path="$1"
+	awk '/FROM node:/' $file_path | cut -d ':' -f 2 | cut -d '.' -f 1 | head -n 1
 }
 
 _znvm_get_version_from_rcfile() {
-	local FILE_PATH
-	FILE_PATH="$1"
-	cat $FILE_PATH
+	local file_path
+	file_path="$1"
+	cat $file_path
 }
 
 _znvm_load_conf_of() {
-	local FILE_DIR
-	FILE_DIR="$1"
+	local file_dir
+	file_dir="$1"
 
-	if [ "$FILE_DIR" = "/" ] || [ -z "$FILE_DIR" ]
+	if [ "$file_dir" = "/" ] || [ -z "$file_dir" ]
 	then
 		return 1
 	fi
 
-	local FILE_NAMES
-	FILE_NAMES="$2"
+	local file_names
+	file_names="$2"
 
-	local FILE_NAME
-	local FILE_PATH
-	for FILE_NAME in ${(s( ))FILE_NAMES}
+	local file_name
+	local file_path
+	for file_name in ${(s( ))FILE_NAMES}
 	do
-		FILE_PATH="$FILE_DIR/$FILE_NAME"
+		file_path="$file_dir/$file_name"
 
 		# check file exists, is regular file and is readable:
-		if [ -f "$FILE_PATH" ] && [ -r "$FILE_PATH" ]
+		if [ -f "$file_path" ] && [ -r "$FILE_PATH" ]
 		then
-			local NODE_VERSION;
-			NODE_VERSION=""
-			if [ "$FILE_NAME" = "Dockerfile" ]
+			local node_version;
+			node_version=""
+			if [ "$file_name" = "Dockerfile" ]
 			then
-				NODE_VERSION="$(_znvm_get_version_from_dockerfile $FILE_PATH)"
+				node_version="$(_znvm_get_version_from_dockerfile $file_path)"
 			# if FILE_NAME = *nvmrc, the expression will remove the nvmrc part
 			# from the FILE_NAME
-			elif [ "${FILE_NAME%%nvmrc}" != "$FILE_NAME" ]
+			elif [ "${file_name%%nvmrc}" != "$file_name" ]
 			then
-				NODE_VERSION="$(_znvm_get_version_from_rcfile $FILE_PATH)"
+				node_version="$(_znvm_get_version_from_rcfile $file_path)"
 			fi
 
-			if [ -n "$NODE_VERSION" ]
+			if [ -n "$node_version" ]
 			then
-				znvm use "$NODE_VERSION"
+				znvm use "$node_version"
 				return 0
 			fi
 		fi
 	done
 
-	_znvm_load_conf_of "$FILE_DIR:h" "$FILE_NAMES"
+	_znvm_load_conf_of "$file_dir:h" "$file_names"
 }
 
 _znvm_load_conf() {
@@ -458,11 +458,11 @@ znvm() {
 		return 1
 	fi
 
-	local COMMAND
-	COMMAND="$1"
+	local command
+	command="$1"
 	shift
 
-	case "$COMMAND" in
+	case "$command" in
 		'use')
 			if [ $# -eq 1 ]
 			then
