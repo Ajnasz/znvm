@@ -464,12 +464,15 @@ znvm() {
 
 	case "$command" in
 		'use')
+			echo "$#" >&2
 			if [ $# -eq 1 ]
 			then
 				_znvm_use_version "$1"
+				return $?
 			elif [ $# -eq 0 ]
 			then
 				_znvm_load_conf
+				return $?
 			else
 				_znvm_get_help "$0" >&2
 				return 1
@@ -477,6 +480,7 @@ znvm() {
 			;;
 		'install')
 			_znvm_install "$1"
+			return $?
 			;;
 		'ls')
 			_znvm_get_installed_versions | awk 'NF >= 9 {print $9" "$10" "$11}'
@@ -488,6 +492,7 @@ znvm() {
 				return 1
 			fi
 			_znvm_get_local_version_for "$1"
+			return $?
 			;;
 		'run')
 			local version_path
@@ -496,12 +501,14 @@ znvm() {
 			;;
 		'alias')
 			_znvm_set_alias_version "$1" "$2"
+			return $?
 			;;
 		'deactivate')
 			_znvm_remove_from_path "$(_znvm_get_version)"
 			;;
 		'activate')
 			_znvm_use_version "default"
+			return $?
 			;;
 		'current')
 			local current_version
