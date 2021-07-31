@@ -27,42 +27,46 @@ _znvm_get_remote_versions() {
 }
 
 _znvm_get_remote_version_for() {
-	local EXPECTED_VERSION
-	EXPECTED_VERSION=$(_znvm_get_normalized_version "$1")
+	local expected_version
+	expected_version=$(_znvm_get_normalized_version "$1")
 
-	local REMOTE_VERSION
-	REMOTE_VERSION=$(_znvm_get_remote_versions | awk '/^'"$EXPECTED_VERSION"'/ { a=$0 } END { print a }')
+	local remote_version
+	remote_version=$(_znvm_get_remote_versions | awk '/^'"$expected_version"'/ { a=$0 } END { print a }')
 
-	echo "$REMOTE_VERSION"
+	echo "$remote_version"
 }
 
 _znvm_get_local_version_for() {
-	local WANTED_VERSION
-	WANTED_VERSION="$1"
+	local wanted_version
+	wanted_version="$1"
 
-	local ALIAS_VERSION
-	ALIAS_VERSION=$(_znvm_get_alias_version "$WANTED_VERSION")
+	local alias_version
+	alias_version=$(_znvm_get_alias_version "$wanted_version")
 
-	local VERSION
-	VERSION=$(_znvm_get_normalized_version "${ALIAS_VERSION:-$WANTED_VERSION}")
+	local version
+	version=$(_znvm_get_normalized_version "${alias_version:-$wanted_version}")
 
-	_znvm_get_installed_versions | awk '/^d/ && $9 ~ /^'"$VERSION"'/ {print $9}' | sort -V | tail -1
+	_znvm_get_installed_versions | awk '/^d/ && $9 ~ /^'"$version"'/ {print $9}' | sort -V | tail -1
+}
+
+_znmv_get_download_dir() {
+	mktemp -d
 }
 
 _znvm_get_download_output_path() {
-	local DOWNLOAD_VERSION
-	DOWNLOAD_VERSION="$1"
+	local download_version
+	download_version="$1"
 
-	local TMP_DIR
-	TMP_DIR="$(mktemp -d)"
+	local tmp_dir
+	tmp_dir="$(_znmv_get_download_dir)"
 
-	local OUTPUT_NAME
-	OUTPUT_NAME="node-$DOWNLOAD_VERSION.tar.xz"
+	local output_name
+	output_name="node-$download_version.tar.xz"
 
-	local OUTPUT_PATH
-	OUTPUT_PATH="$TMP_DIR/$OUTPUT_NAME"
+	local output_path
+	output_path="$tmp_dir/$output_name"
 
-	echo "$OUTPUT_PATH"
+	echo "$output_path"
 }
 
 _znvm_download_version() {
@@ -175,15 +179,15 @@ _znvm_install() {
 _znvm_get_version() {
 	typeset -Ux PATH path
 
-	local INSTALL_DIR
-	INSTALL_DIR="$(_znvm_get_install_dir)"
+	local install_dir
+	install_dir="$(_znvm_get_install_dir)"
 
-	local MATCH
-	MATCH=$path[(r)$INSTALL_DIR*]
+	local match
+	match=$path[(r)$install_dir*]
 
-	if [ ! -z "$MATCH" ]
+	if [ ! -z "$match" ]
 	then
-		echo $MATCH
+		echo $match
 		return 0
 	fi
 
@@ -192,30 +196,30 @@ _znvm_get_version() {
 
 _znvm_get_version_from_path() {
 	# /home/foo/.znvm/versions/v1.2.3/bin
-	local VERSION_PATH
-	VERSION_PATH="$1"
+	local version_path
+	version_path="$1"
 
 	# remove the install path
-	VERSION_PATH="${VERSION_PATH##$(_znvm_get_install_dir)}"
+	version_path="${version_path##$(_znvm_get_install_dir)}"
 	# remove leading /
-	VERSION_PATH="${VERSION_PATH#/}"
+	version_path="${version_path#/}"
 	# remove every subdirectories of the version string (v1.2.3/bin)
-	echo ${VERSION_PATH%%/*}
+	echo "${version_path%%/*}"
 }
 
 _znvm_get_normalized_version() {
-	local VERSION
-	VERSION="$1"
+	local version
+	version="$1"
 
-	local EXPECTED_VERSION
-	EXPECTED_VERSION="$VERSION"
+	local expected_version
+	expected_version="$version"
 
-	if [ -n "${EXPECTED_VERSION##v*}" ]
+	if [ -n "${expected_version##v*}" ]
 	then
-		EXPECTED_VERSION="v$EXPECTED_VERSION"
+		expected_version="v$expected_version"
 	fi
 
-	echo "$EXPECTED_VERSION"
+	echo "$expected_version"
 }
 
 _znvm_get_path_for_version() {
@@ -299,60 +303,65 @@ _znvm_find_closest_upper_version() {
 }
 
 _znvm_use_version() {
-	local WANTED_VERSION
-	WANTED_VERSION="$1"
+	local wanted_version
+	wanted_version="$1"
 
-	local ALIAS_VERSION
-	ALIAS_VERSION=$(_znvm_get_alias_version "$WANTED_VERSION")
+	local alias_version
+	alias_version=$(_znvm_get_alias_version "$wanted_version")
 
-	local RESOLVED_VERSION
-	RESOLVED_VERSION="${ALIAS_VERSION:-$WANTED_VERSION}"
+	local resolved_version
+	resolved_version="${alias_version:-$wanted_version}"
 
 	# prefix the version with a "v"
-	if [ -n "${RESOLVED_VERSION##v*}" ]
+	if [ -n "${resolved_version##v*}" ]
 	then
-		RESOLVED_VERSION="v$RESOLVED_VERSION"
+		resolved_version="v$resolved_version"
 	fi
 
-	local CLOSEST_VERSION
-	CLOSEST_VERSION=$(_znvm_find_closest_upper_version "${RESOLVED_VERSION}")
+	local closest_version
+	closest_version=$(_znvm_find_closest_upper_version "${resolved_version}")
 
-	if [ -n "$CLOSEST_VERSION" ]
+	local closest_version_warning=0
+	if [ -n "$closest_version" ]
 	then
-		if [ "$RESOLVED_VERSION" != "$CLOSEST_VERSION" ]
+		if [ "$resolved_version" != "$closest_version" ]
 		then
-			echo "Warning: Using version $CLOSEST_VERSION for $WANTED_VERSION" >&2
+			closest_version_warning=1
 		fi
 	fi
 
-	local VERSION
-	VERSION=${CLOSEST_VERSION:-$RESOLVED_VERSION}
+	local version
+	version=${closest_version:-$resolved_version}
 
-	local NODEJS_PATH
-	NODEJS_PATH=$(_znvm_get_path_for_version "$VERSION")
+	local nodejs_path
+	nodejs_path=$(_znvm_get_path_for_version "$version")
 
-	if [ ! -d "$NODEJS_PATH" ]
+	if [ ! -d "$nodejs_path" ]
 	then
-		echo "$VERSION not found" >&2
+		echo "$version not found" >&2
 		return 1
 	fi
 
-	local CURRENT_PATH
-	CURRENT_PATH=$(_znvm_get_version)
+	local current_path
+	current_path=$(_znvm_get_version)
 
-	if [ "$CURRENT_PATH" = "$NODEJS_PATH" ]
+	if [ "$current_path" = "$nodejs_path" ]
 	then
 		return 0
 	fi
 
-	if [ -n "$CURRENT_PATH" ]
+	if [ -n "$current_path" ]
 	then
-		_znvm_remove_from_path "$CURRENT_PATH"
+		_znvm_remove_from_path "$current_path"
 	fi
 
-	if [ -d "$NODEJS_PATH" ]
+	if [ $closest_version_warning -eq 1 ]
 	then
-		_znvm_add_to_path "$NODEJS_PATH"
+		echo "Warning: Using version $closest_version for $WANTED_VERSION" >&2
+	fi
+	if [ -d "$nodejs_path" ]
+	then
+		_znvm_add_to_path "$nodejs_path"
 	fi
 
 	return 0
