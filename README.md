@@ -109,13 +109,15 @@ Use a default version
 znvm use default
 ```
 
-### Auto use from `.znvmrc`, `.nvmrc` or `Dockerfile`
+### Auto use from `.znvmrc`, `.nvmrc` or `Dockerfile` files
 
 Add the following line to the .zshrc
 
 ```bash
 znvm hookwdchange
 ```
+
+The hook will traverse directory structure upwards from the current directory looking for the files defined in `$ZNVM_SEARCH_FILENAMES` every time you change directory.
 
 That will add a hook, which executes every time you change directory. The hook listener will search `.znvmrc`, `.nvmrc` and `Dockerfile` in the directory you entered to. If no file found, it will try to find it in the parent directory until it reaches the root directory.
 
