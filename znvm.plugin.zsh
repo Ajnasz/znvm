@@ -406,12 +406,12 @@ _znvm_load_conf_of() {
 
 	local file_name
 	local file_path
-	for file_name in ${(s( ))FILE_NAMES}
+	for file_name in ${(s( ))file_names}
 	do
 		file_path="$file_dir/$file_name"
 
 		# check file exists, is regular file and is readable:
-		if [ -f "$file_path" ] && [ -r "$FILE_PATH" ]
+		if [ -f "$file_path" ] && [ -r "$file_path" ]
 		then
 			local node_version;
 			node_version=""
