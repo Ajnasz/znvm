@@ -464,7 +464,6 @@ znvm() {
 
 	case "$command" in
 		'use')
-			echo "$#" >&2
 			if [ $# -eq 1 ]
 			then
 				_znvm_use_version "$1"
