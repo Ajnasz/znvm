@@ -445,7 +445,7 @@ _znvm_load_conf() {
 	return 1
 }
 
-_read_nvm_rc_on_pw_change() {
+_znvm_read_nvm_rc_on_pw_change() {
 	autoload -U add-zsh-hook
 
 	add-zsh-hook chpwd _znvm_load_conf
@@ -519,7 +519,7 @@ znvm() {
 			_znvm_get_version_from_path "$current_version"
 			;;
 		'hookwdchange')
-			_read_nvm_rc_on_pw_change
+			_znvm_read_nvm_rc_on_pw_change
 			;;
 		'help'|'h')
 			_znvm_get_help "$0"
