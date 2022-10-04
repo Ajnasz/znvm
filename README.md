@@ -48,6 +48,10 @@ cd $ZSH
 git submodule add https://github.com/Ajnasz/znvm custom/plugins/znvm
 ```
 
+### Install in [zgenom](https://github.com/jandamm/zgenom)
+
+Add `zgenom load Ajnasz/znvm` in your `.zshrc` with your other `zgenom load` commands.
+
 Enable the `znvm` plugin in your `.zshrc`.
 
 [How to enable plugins in oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh#plugins)
