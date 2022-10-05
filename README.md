@@ -48,11 +48,12 @@ cd $ZSH
 git submodule add https://github.com/Ajnasz/znvm custom/plugins/znvm
 ```
 
-Enable the `znvm` plugin in your `.zshrc`.
+#### Enable the `znvm` plugin in your `.zshrc`.
 
 [How to enable plugins in oh-my-zsh](https://github.com/ohmyzsh/ohmyzsh#plugins)
 
-Load default nodejs version
+### Load default nodejs version
+
 ```bash
 # load default nodejs version
 znvm use default
