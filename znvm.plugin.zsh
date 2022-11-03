@@ -482,7 +482,7 @@ znvm() {
 			return $?
 			;;
 		'ls')
-			_znvm_get_installed_versions | awk 'NF >= 9 {print $9" "$10" "$11}'
+			_znvm_get_installed_versions | awk 'NF >= 9 {print $9" "$10" "$11}' | sort -V
 			;;
 		'which')
 			if [ $# -lt 1 ]
