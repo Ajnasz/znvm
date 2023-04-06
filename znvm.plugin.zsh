@@ -357,7 +357,7 @@ _znvm_use_version() {
 
 	if [ $closest_version_warning -eq 1 ]
 	then
-		echo "using version $closest_version for $wanted_version" >&2
+		echo "using nodejs version $closest_version for $wanted_version" >&2
 	fi
 	if [ -d "$nodejs_path" ]
 	then
