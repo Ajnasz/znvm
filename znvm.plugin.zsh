@@ -383,7 +383,7 @@ _znvm_get_help() {
 _znvm_get_version_from_dockerfile() {
 	local file_path
 	file_path="$1"
-	awk '/FROM node:/' $file_path | cut -d ':' -f 2 | cut -d '.' -f 1 | head -n 1
+	awk '/FROM node:/' $file_path | head -n 1 | cut -d ':' -f 2 | cut -d '.' -f 1 | cut -d '-' -f 1
 }
 
 _znvm_get_version_from_rcfile() {
