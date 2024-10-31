@@ -11,7 +11,7 @@ _znvm_remove_from_path() {
 }
 
 _znvm_get_install_dir() {
-	echo ${ZNVM_DIR:-$HOME/.znvm}/versions
+	echo ${ZNVM_DIR:-$HOME/.local/share/znvm}/versions
 }
 
 _znvm_get_hook_search_filenames() {
@@ -450,6 +450,20 @@ _znvm_read_nvm_rc_on_pw_change() {
 
 	add-zsh-hook chpwd _znvm_load_conf
 }
+
+_migrate_znvm() {
+	if [ -z "$ZNVM_DIR" ]
+	then
+		if [ -d "$HOME/.znvm" ]
+		then
+			echo "migrating $HOME/.znvm to $HOME/.local/share/znvm" >&2
+			mkdir -p "$HOME/.local/share"
+			mv "$HOME/.znvm" "$HOME/.local/share/znvm"
+		fi
+	fi
+}
+
+_migrate_znvm
 
 znvm() {
 	if [ $# -lt 1 ]
