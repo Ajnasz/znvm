@@ -12,10 +12,11 @@ _1st_arguments=(
 	'current:print currently active version'
 	'alias:NAME VERSION - create VERSION alias to NAME'
 	'hookpwchange:read automatically .nvmrc when changing directory'
+	'pathof:VERSION - print path of VERSION'
 )
 _znvm_submcommand() {
 	case "$words[2]" in
-		'use'|'which')
+		'use'|'which'|'pathof')
 			_alternative "versions:installed versions:_znvm_installed_versions"
 			;;
 		'alias')
@@ -38,3 +39,5 @@ fi
 
 
 _znvm_submcommand
+
+# vi:ft=zsh:noexpandtab

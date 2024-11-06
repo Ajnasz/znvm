@@ -302,7 +302,7 @@ _znvm_find_closest_upper_version() {
 	_znvm_find_closest_upper_version "$cut_version" "$existing_versions"
 }
 
-_znvm_use_version() {
+_znvm_resolve_version() {
 	local wanted_version
 	wanted_version="$1"
 
@@ -332,6 +332,16 @@ _znvm_use_version() {
 
 	local version
 	version=${closest_version:-$resolved_version}
+
+	echo $version
+}
+
+_znvm_use_version() {
+	local wanted_version
+	wanted_version="$1"
+
+	local version
+	version=$(_znvm_resolve_version "$wanted_version")
 
 	local nodejs_path
 	nodejs_path=$(_znvm_get_path_for_version "$version")
@@ -367,6 +377,20 @@ _znvm_use_version() {
 	return 0
 }
 
+_znvm_path_to() {
+	local wanted_version
+	wanted_version="$1"
+	if [ -z "$wanted_version" ]
+	then
+		echo "Version is mandantory" >&2
+		return 1
+	fi
+	local version
+	version=$(_znvm_resolve_version "$wanted_version")
+	local nodejs_path
+	nodejs_path=$(_znvm_get_path_for_version "$version")
+}
+
 _znvm_get_help() {
 	echo "Usage:"
 	echo "$1 ls - list installed versions"
@@ -378,6 +402,7 @@ _znvm_get_help() {
 	echo "$1 alias NAME VERSION - create VERSION alias to NAME"
 	echo "$1 current - get the activated version"
 	echo "$1 hookwdchange - read automatically .nvmrc when changing directory"
+	echo "$1 pathof VERSION - get the path to the version"
 }
 
 _znvm_get_version_from_dockerfile() {
@@ -535,6 +560,9 @@ znvm() {
 		'hookwdchange')
 			_znvm_read_nvm_rc_on_pw_change
 			;;
+		'pathof')
+			_znvm_get_path_for_version "$1"
+			;;
 		'help'|'h')
 			_znvm_get_help "$0"
 			;;
@@ -544,3 +572,5 @@ znvm() {
 			;;
 	esac
 }
+
+# vi:ft=zsh:noexpandtab
