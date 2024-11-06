@@ -330,6 +330,11 @@ _znvm_resolve_version() {
 		fi
 	fi
 
+	if [ $closest_version_warning -eq 1 ]
+	then
+		echo "using nodejs version $closest_version for $wanted_version" >&2
+	fi
+
 	local version
 	version=${closest_version:-$resolved_version}
 
@@ -365,10 +370,6 @@ _znvm_use_version() {
 		_znvm_remove_from_path "$current_path"
 	fi
 
-	if [ $closest_version_warning -eq 1 ]
-	then
-		echo "using nodejs version $closest_version for $wanted_version" >&2
-	fi
 	if [ -d "$nodejs_path" ]
 	then
 		_znvm_add_to_path "$nodejs_path"
