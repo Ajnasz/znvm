@@ -1,0 +1,88 @@
+.TH ZNVM 1 "November 2024" "znvm 1.0" "User Commands"
+
+.SH NAME
+znvm \- Zsh Node Version Manager
+
+.SH SYNOPSIS
+.B znvm
+[\fIcommand\fR] [\fIarguments\fR]
+
+.SH DESCRIPTION
+.B znvm
+is a Zsh plugin for managing multiple Node.js versions.
+
+.SH COMMANDS
+
+.TP
+.B install
+Install a specific version of Node.js.
+
+.TP
+.B use
+Switch to a specific version of Node.js.
+
+.TP
+.B list
+List all installed Node.js versions.
+
+.TP
+.B uninstall
+Uninstall a specific version of Node.js.
+
+.TP
+.B current
+Show the currently active Node.js version.
+
+.TP
+.B ls-remote
+List all available Node.js versions from the remote repository.
+
+.TP
+.B alias
+Create an alias for a specific Node.js version.
+
+.TP
+.B unalias
+Remove an alias.
+
+.SH EXAMPLES
+
+.TP
+.B znvm install 14.17.0
+Install Node.js version 14.17.0.
+
+.TP
+.B znvm use 14.17.0
+Switch to Node.js version 14.17.0.
+
+.TP
+.B znvm list
+List all installed Node.js versions.
+
+.TP
+.B znvm uninstall 14.17.0
+Uninstall Node.js version 14.17.0.
+
+.TP
+.B znvm current
+Show the currently active Node.js version.
+
+.TP
+.B znvm ls-remote
+List all available Node.js versions from the remote repository.
+
+.TP
+.B znvm alias default 14.17.0
+Create an alias "default" for Node.js version 14.17.0.
+
+.TP
+.B znvm unalias default
+Remove the alias "default".
+
+.SH SEE ALSO
+.BR node (1)
+
+.SH AUTHOR
+Written by the znvm development team.
+
+
