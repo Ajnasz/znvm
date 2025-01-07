@@ -393,17 +393,17 @@ _znvm_path_to() {
 }
 
 _znvm_get_help() {
-	echo "Usage:"
-	echo "$1 ls - list installed versions"
-	echo "$1 deactivate - remove nodejs from path"
-	echo "$1 activate - add default nodejs to path"
-	echo "$1 use [VERSION] - change active nodejs to VERSION. If VERSION omitted, load version from \$ZNVM_SEARCH_FILENAMES"
-	echo "$1 install VERSION - download and install nodejs VERSION"
-	echo "$1 which VERSION - print which version matches to VERSION"
-	echo "$1 alias NAME VERSION - create VERSION alias to NAME"
-	echo "$1 current - get the activated version"
-	echo "$1 hookwdchange - read automatically .nvmrc when changing directory"
-	echo "$1 pathof VERSION - get the path to the version"
+	echo "$1 install VERSION - Download and install the specified Node.js VERSION."
+	echo "$1 use [VERSION] - Switch to a specific Node.js version. If VERSION is omitted, it will load the version specified in $(_znvm_get_hook_search_filenames)."
+	echo "$1 deactivate - Remove Node.js from the system PATH, effectively deactivating it."
+	echo "$1 activate - Add the default Node.js version to the system PATH, effectively activating it."
+	echo "$1 ls - List all installed Node.js versions."
+	echo "$1 ls-remote - List all available Node.js versions."
+	echo "$1 which VERSION - Display the version number that would be used if the specified VERSION is not installed."
+	echo "$1 alias NAME VERSION - Create an alias NAME for the specified Node.js VERSION."
+	echo "$1 current - Display the currently activated Node.js version."
+	echo "$1 pathof VERSION - Display the installation path of the specified Node.js VERSION."
+	echo "$1 hookwdchange - Automatically load the Node.js version defined in $(_znvm_get_hook_search_filenames) files when changing directories."
 }
 
 _znvm_get_version_from_dockerfile() {
@@ -523,6 +523,9 @@ znvm() {
 			;;
 		'ls')
 			_znvm_get_installed_versions | awk 'NF >= 9 {print $9" "$10" "$11}' | sort -V
+			;;
+		'ls-remote')
+			_znvm_get_remote_versions
 			;;
 		'which')
 			if [ $# -lt 1 ]

@@ -4,6 +4,7 @@
 local -a _1st_arguments
 _1st_arguments=(
 	'ls:list installed versions'
+	'ls-remote:list remote versions'
 	'deactivate:remove nodejs from path'
 	'activate:add default nodejs to path'
 	'use:VERSION - change active nodejs to VERSION'
@@ -11,7 +12,7 @@ _1st_arguments=(
 	'which:VERSION - print which version matches to VERSION'
 	'current:print currently active version'
 	'alias:NAME VERSION - create VERSION alias to NAME'
-	'hookpwchange:read automatically .nvmrc when changing directory'
+	'hookwdchange:read automatically .nvmrc when changing directory'
 	'pathof:VERSION - print path of VERSION'
 )
 _znvm_submcommand() {
