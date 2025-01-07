@@ -2,6 +2,18 @@
 
 Similar to [nvm-sh](https://github.com/nvm-sh/nvm) but meant to be faster (on startup at least).
 
+## Features
+
+- Install nodejs versions
+- Use nodejs version defined in `.nvmrc`, `.znvmrc` or `Dockerfile`
+  - To automatically use the version add `znvm hookwdchange` to your `.zshrc`
+- Aliases for nodejs versions: for example `default` can be an alias for `v12`
+- Support of closest version:
+  - if a certain version is not installed, it will try to find the closest version and will choose the newest one
+    for example if you try to use `v10.0.0` but you don't have it installed, it will use `v10.24.0` if you have it installed
+- Autocompletion for znvm commands
+- Load default nodejs version on shell startup
+
 ## Install
 
 ### Dependencies
