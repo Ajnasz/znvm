@@ -9,6 +9,7 @@ _1st_arguments=(
 	'activate:add default nodejs to path'
 	'use:VERSION - change active nodejs to VERSION'
 	'install:VERSION - download and install nodejs VERSION'
+	'rm:VERSION - remove nodejs VERSION'
 	'which:VERSION - print which version matches to VERSION'
 	'current:print currently active version'
 	'alias:NAME VERSION - create VERSION alias to NAME'
@@ -17,7 +18,7 @@ _1st_arguments=(
 )
 _znvm_submcommand() {
 	case "$words[2]" in
-		'use'|'which'|'pathof')
+		'use'|'which'|'pathof'|'rm')
 			_alternative "versions:installed versions:_znvm_installed_versions"
 			;;
 		'alias')

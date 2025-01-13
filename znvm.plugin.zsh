@@ -44,7 +44,14 @@ _znvm_get_local_version_for() {
 	alias_version=$(_znvm_get_alias_version "$wanted_version")
 
 	local version
-	version=$(_znvm_get_normalized_version "${alias_version:-$wanted_version}")
+
+	if [ -n "$alias_version" ]
+	then
+		version="$alias_version"
+	else
+		version="$wanted_version"
+	fi
+	version=$(_znvm_get_normalized_version "${version}")
 
 	_znvm_get_installed_versions | awk '/^d/ && $9 ~ /^'"$version"'/ {print $9}' | sort -V | tail -1
 }
@@ -248,6 +255,56 @@ _znvm_get_alias_version() {
 	return 0
 }
 
+_znvm_get_alias_versions() {
+	local version
+	version="$1"
+
+	if [ -z "$version" ]
+	then
+		return 1
+	fi
+
+	local alias_version
+	_znvm_get_installed_versions | awk '/^l/ && $11 == "'"$version"'" { print $9 }'
+}
+
+_znvm_remove() {
+	local version_to_remove
+	version_to_remove="$1"
+
+	local version
+	version=$(_znvm_get_local_version_for "$version_to_remove")
+
+	if [ -z "$version" ]
+	then
+		echo "No local version found" >&2
+		return 1
+	fi
+
+	local install_dir
+	install_dir="$(_znvm_get_install_dir)"
+
+	if [ -d "$install_dir/$version" ]
+	then
+		rm -rf "$install_dir/$version"
+	fi
+
+	for alias_version in $(_znvm_get_alias_versions "$version")
+	do
+		echo "Removing alias $alias_version" >&2
+		rm -f "$install_dir/$alias_version"
+
+		if [ "$alias_version" = "default" ]
+		then
+			local latest_version
+			latest_version="$(_znvm_get_installed_versions | awk '/^d/ {print $9}' | sort -V | tail -n 1)"
+			_znvm_set_alias_version "default" "$latest_version"
+			echo "Set default to $latest_version" >&2
+			znvm use "$latest_version" >&2
+		fi
+	done
+}
+
 _znvm_set_alias_version() {
 	local alias_name
 	alias_name="$1"
@@ -399,6 +456,7 @@ _znvm_get_help() {
 	echo "$1 activate - Add the default Node.js version to the system PATH, effectively activating it."
 	echo "$1 ls - List all installed Node.js versions."
 	echo "$1 ls-remote - List all available Node.js versions."
+	echo "$1 rm VERSION - Remove the specified Node.js VERSION. Removes all aliases pointing to the version. If the version is the default version, the latest version will be set as the default."
 	echo "$1 which VERSION - Display the version number that would be used if the specified VERSION is not installed."
 	echo "$1 alias NAME VERSION - Create an alias NAME for the specified Node.js VERSION."
 	echo "$1 current - Display the currently activated Node.js version."
@@ -534,6 +592,10 @@ znvm() {
 				return 1
 			fi
 			_znvm_get_local_version_for "$1"
+			return $?
+			;;
+		'rm')
+			_znvm_remove "$1"
 			return $?
 			;;
 		'run')
