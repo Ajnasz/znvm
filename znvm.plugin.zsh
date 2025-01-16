@@ -18,25 +18,25 @@ _znvm_get_hook_search_filenames() {
 	echo ${ZNVM_SEARCH_FILENAMES:-.znvmrc .nvmrc Dockerfile}
 }
 
-_znvm_get_installed_versions() {
+_znvm_list_installed_versions() {
 	ls --color=never -l "$(_znvm_get_install_dir)"
 }
 
-_znvm_get_remote_versions() {
+_znvm_list_remote_versions() {
 	curl -s "https://nodejs.org/dist/index.tab" | cut -f 1 | sort -V | head -n -1
 }
 
-_znvm_get_remote_version_for() {
+_znvm_get_remote_version() {
 	local expected_version
-	expected_version=$(_znvm_get_normalized_version "$1")
+	expected_version=$(_znvm_normalize_version "$1")
 
 	local remote_version
-	remote_version=$(_znvm_get_remote_versions | awk '/^'"$expected_version"'/ { a=$0 } END { print a }')
+	remote_version=$(_znvm_list_remote_versions | awk '/^'"$expected_version"'/ { a=$0 } END { print a }')
 
 	echo "$remote_version"
 }
 
-_znvm_get_local_version_for() {
+_znvm_get_local_version() {
 	local wanted_version
 	wanted_version="$1"
 
@@ -51,9 +51,9 @@ _znvm_get_local_version_for() {
 	else
 		version="$wanted_version"
 	fi
-	version=$(_znvm_get_normalized_version "${version}")
+	version=$(_znvm_normalize_version "${version}")
 
-	_znvm_get_installed_versions | awk '/^d/ && $9 ~ /^'"$version"'/ {print $9}' | sort -V | tail -1
+	_znvm_list_installed_versions | awk '/^d/ && $9 ~ /^'"$version"'/ {print $9}' | sort -V | tail -1
 }
 
 _znvm_get_download_dir() {
@@ -134,7 +134,7 @@ _znvm_download() {
 	expected_version="$1"
 
 	local download_version
-	download_version=$(_znvm_get_remote_version_for "$expected_version")
+	download_version=$(_znvm_get_remote_version "$expected_version")
 
 	local output_path
 	output_path=$(_znvm_get_download_output_path "$download_version")
@@ -201,7 +201,7 @@ _znvm_get_version() {
 	return 1
 }
 
-_znvm_get_version_from_path() {
+_znvm_extract_version_from_path() {
 	# /home/foo/.znvm/versions/v1.2.3/bin
 	local version_path
 	version_path="$1"
@@ -214,7 +214,7 @@ _znvm_get_version_from_path() {
 	echo "${version_path%%/*}"
 }
 
-_znvm_get_normalized_version() {
+_znvm_normalize_version() {
 	local version
 	version="$1"
 
@@ -229,12 +229,12 @@ _znvm_get_normalized_version() {
 	echo "$expected_version"
 }
 
-_znvm_get_path_for_version() {
+_znvm_get_version_path() {
 	local Version
 	version="$1"
 
 	local local_version
-	local_version="$(_znvm_get_local_version_for "$version")"
+	local_version="$(_znvm_get_local_version "$version")"
 
 	echo "$(_znvm_get_install_dir)/$local_version/bin"
 }
@@ -244,7 +244,7 @@ _znvm_get_alias_version() {
 	alias_version="$1"
 
 	local version
-	version=$(_znvm_get_installed_versions | awk '$9 == "'"$alias_version"'" { print $11 }')
+	version=$(_znvm_list_installed_versions | awk '$9 == "'"$alias_version"'" { print $11 }')
 
 	if [ -z "$version" ]
 	then
@@ -255,7 +255,7 @@ _znvm_get_alias_version() {
 	return 0
 }
 
-_znvm_get_alias_versions() {
+_znvm_list_alias_versions() {
 	local version
 	version="$1"
 
@@ -265,15 +265,15 @@ _znvm_get_alias_versions() {
 	fi
 
 	local alias_version
-	_znvm_get_installed_versions | awk '/^l/ && $11 == "'"$version"'" { print $9 }'
+	_znvm_list_installed_versions | awk '/^l/ && $11 == "'"$version"'" { print $9 }'
 }
 
-_znvm_remove() {
+_znvm_remove_version() {
 	local version_to_remove
 	version_to_remove="$1"
 
 	local version
-	version=$(_znvm_get_local_version_for "$version_to_remove")
+	version=$(_znvm_get_local_version "$version_to_remove")
 
 	if [ -z "$version" ]
 	then
@@ -289,7 +289,7 @@ _znvm_remove() {
 		rm -rf "$install_dir/$version"
 	fi
 
-	for alias_version in $(_znvm_get_alias_versions "$version")
+	for alias_version in $(_znvm_list_alias_versions "$version")
 	do
 		echo "Removing alias $alias_version" >&2
 		rm -f "$install_dir/$alias_version"
@@ -297,7 +297,7 @@ _znvm_remove() {
 		if [ "$alias_version" = "default" ]
 		then
 			local latest_version
-			latest_version="$(_znvm_get_installed_versions | awk '/^d/ {print $9}' | sort -V | tail -n 1)"
+			latest_version="$(_znvm_list_installed_versions | awk '/^d/ {print $9}' | sort -V | tail -n 1)"
 			_znvm_set_alias_version "default" "$latest_version"
 			echo "Set default to $latest_version" >&2
 			znvm use "$latest_version" >&2
@@ -313,7 +313,7 @@ _znvm_set_alias_version() {
 	version="$2"
 
 	local local_version
-	local_version=$(_znvm_get_local_version_for "$version")
+	local_version=$(_znvm_get_local_version "$version")
 
 	if [ -z "$local_version" ]
 	then
@@ -332,7 +332,7 @@ _znvm_set_alias_version() {
 	ln -s "$local_version" "$install_dir/$alias_name"
 }
 
-_znvm_find_closest_upper_version() {
+_znvm_find_closest_version() {
 	local version
 	version="$1"
 
@@ -356,7 +356,7 @@ _znvm_find_closest_upper_version() {
 		return 1
 	fi
 
-	_znvm_find_closest_upper_version "$cut_version" "$existing_versions"
+	_znvm_find_closest_version "$cut_version" "$existing_versions"
 }
 
 _znvm_resolve_version() {
@@ -376,7 +376,7 @@ _znvm_resolve_version() {
 	fi
 
 	local closest_version
-	closest_version=$(_znvm_find_closest_upper_version "${resolved_version}")
+	closest_version=$(_znvm_find_closest_version "${resolved_version}")
 
 	local closest_version_warning=0
 	if [ -n "$closest_version" ]
@@ -406,7 +406,7 @@ _znvm_use_version() {
 	version=$(_znvm_resolve_version "$wanted_version")
 
 	local nodejs_path
-	nodejs_path=$(_znvm_get_path_for_version "$version")
+	nodejs_path=$(_znvm_get_version_path "$version")
 
 	if [ ! -d "$nodejs_path" ]
 	then
@@ -446,10 +446,10 @@ _znvm_path_to() {
 	local version
 	version=$(_znvm_resolve_version "$wanted_version")
 	local nodejs_path
-	nodejs_path=$(_znvm_get_path_for_version "$version")
+	nodejs_path=$(_znvm_get_version_path "$version")
 }
 
-_znvm_get_help() {
+_znvm_print_help() {
 	echo "$1 install VERSION - Download and install the specified Node.js VERSION."
 	echo "$1 use [VERSION] - Switch to a specific Node.js version. If VERSION is omitted, it will load the version specified in $(_znvm_get_hook_search_filenames)."
 	echo "$1 deactivate - Remove Node.js from the system PATH, effectively deactivating it."
@@ -552,7 +552,7 @@ _migrate_znvm
 znvm() {
 	if [ $# -lt 1 ]
 	then
-		_znvm_get_help "$0" >&2
+		_znvm_print_help "$0" >&2
 		return 1
 	fi
 
@@ -571,7 +571,7 @@ znvm() {
 				_znvm_load_conf
 				return $?
 			else
-				_znvm_get_help "$0" >&2
+				_znvm_print_help "$0" >&2
 				return 1
 			fi
 			;;
@@ -580,10 +580,10 @@ znvm() {
 			return $?
 			;;
 		'ls')
-			_znvm_get_installed_versions | awk 'NF >= 9 {print $9" "$10" "$11}' | sort -V
+			_znvm_list_installed_versions | awk 'NF >= 9 {print $9" "$10" "$11}' | sort -V
 			;;
 		'ls-remote')
-			_znvm_get_remote_versions
+			_znvm_list_remote_versions
 			;;
 		'which')
 			if [ $# -lt 1 ]
@@ -591,16 +591,16 @@ znvm() {
 				echo "Version is mandantory" >&2
 				return 1
 			fi
-			_znvm_get_local_version_for "$1"
+			_znvm_get_local_version "$1"
 			return $?
 			;;
 		'rm')
-			_znvm_remove "$1"
+			_znvm_remove_version "$1"
 			return $?
 			;;
 		'run')
 			local version_path
-			version_path="$(_znvm_get_path_for_version)/node"
+			version_path="$(_znvm_get_version_path)/node"
 			$version_path $@
 			;;
 		'alias')
@@ -621,19 +621,19 @@ znvm() {
 			then
 				return 1
 			fi
-			_znvm_get_version_from_path "$current_version"
+			_znvm_extract_version_from_path "$current_version"
 			;;
 		'hookwdchange')
 			_znvm_read_nvm_rc_on_pw_change
 			;;
 		'pathof')
-			_znvm_get_path_for_version "$1"
+			_znvm_get_version_path "$1"
 			;;
 		'help'|'h')
-			_znvm_get_help "$0"
+			_znvm_print_help "$0"
 			;;
 		*)
-			_znvm_get_help "$0" >&2
+			_znvm_print_help "$0" >&2
 			return 1
 			;;
 	esac
