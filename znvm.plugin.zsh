@@ -18,12 +18,41 @@ _znvm_get_hook_search_filenames() {
 	echo ${ZNVM_SEARCH_FILENAMES:-.znvmrc .nvmrc Dockerfile}
 }
 
+__ZNVM_HAS_GNU_LS=""
+
+_znvm_has_gnu_ls() {
+	if [ -z "$__ZNVM_HAS_GNU_LS" ]
+	then
+		ls --color=never /dev/null &>/dev/null
+		__ZNVM_HAS_GNU_LS=$?
+	fi
+
+	return $__ZNVM_HAS_GNU_LS
+}
+
 _znvm_list_installed_versions() {
-	ls --color=never -l "$(_znvm_get_install_dir)"
+	if _znvm_has_gnu_ls;then
+		ls --color=never -l "$(_znvm_get_install_dir)"
+	else
+		CLICOLOR=0 ls -l "$(_znvm_get_install_dir)"
+	fi
+}
+
+_znvm_sort_versions() {
+	if sort --version 2>/dev/null | grep -q GNU; then
+		sort -V
+	else
+		if command -v gsort >/dev/null 2>&1; then
+			gsort -V
+		else
+			echo "znvm: GNU sort not found. Install coreutils (e.g. brew install coreutils)" >&2
+			return 1
+		fi
+	fi
 }
 
 _znvm_list_remote_versions() {
-	curl -s "https://nodejs.org/dist/index.tab" | cut -f 1 | sort -V | head -n -1
+	curl -s "https://nodejs.org/dist/index.tab" | cut -f 1 | grep -v version | _znvm_sort_versions || return 1
 }
 
 _znvm_get_remote_version() {
@@ -53,7 +82,9 @@ _znvm_get_local_version() {
 	fi
 	version=$(_znvm_normalize_version "${version}")
 
-	_znvm_list_installed_versions | awk '/^d/ && $9 ~ /^'"$version"'/ {print $9}' | sort -V | tail -1
+	local result
+	result=$(_znvm_list_installed_versions | awk '/^d/ && $9 ~ /^'"$version"'/ {print $9}' | _znvm_sort_versions) || return 1
+	echo $result | tail -1
 }
 
 _znvm_get_download_dir() {
@@ -96,6 +127,13 @@ _znvm_download_version() {
 		"armv7l")
 			arch="armv7l"
 			;;
+		"arm64"|"aarch64")
+			arch="arm64"
+			;;
+		*)
+			echo "Unsupported architecture: $(uname -m)" >&2
+			return 1
+			;;
 	esac
 
 	case "$(uname -s)" in
@@ -103,7 +141,11 @@ _znvm_download_version() {
 			os="linux"
 			;;
 		"Darwin")
-			os="osx"
+			os="darwin"
+			;;
+		*)
+			echo "Unsupported operating system: $(uname -s)" >&2
+			return 1
 			;;
 	esac
 
@@ -118,15 +160,15 @@ _znvm_download_version() {
 
 _znvm_extract() {
 
-	local nodejs_xz_path
-	nodejs_xz_path="$1"
+	local nodejs_archive_path
+	nodejs_archive_path="$1"
 
 	local destination_directory
 	destination_directory="$2"
 
 	mkdir -p "$destination_directory"
 
-	tar xJf "$nodejs_xz_path" --strip-components=1 -C "$destination_directory"
+	tar xJf "$nodejs_archive_path" --strip-components=1 -C "$destination_directory"
 }
 
 _znvm_download() {
@@ -296,8 +338,11 @@ _znvm_remove_version() {
 
 		if [ "$alias_version" = "default" ]
 		then
+			local versions
+			versions="$(_znvm_list_installed_versions | awk '/^d/ {print $9}' | _znvm_sort_versions)" || return 1
+
 			local latest_version
-			latest_version="$(_znvm_list_installed_versions | awk '/^d/ {print $9}' | sort -V | tail -n 1)"
+			latest_version="$(echo $versions | tail -n 1)"
 			_znvm_set_alias_version "default" "$latest_version"
 			echo "Set default to $latest_version" >&2
 			znvm use "$latest_version" >&2
@@ -336,8 +381,11 @@ _znvm_find_closest_version() {
 	local version
 	version="$1"
 
+	local versions
+	versions="${2:-$(znvm ls | awk '{ if (NF == 3) { print $3 } else { print $1 } }' | _znvm_sort_versions)}" || return 1
+
 	local existing_versions
-	existing_versions="${2:-$(znvm ls | awk '{ if (NF == 3) { print $3 } else { print $1 } }' | sort -V | uniq)}"
+	existing_versions="${2:-$(echo $versions | uniq)}"
 
 	local found_version
 	found_version=$(echo $existing_versions | awk '/^v?'"$version"'/ { a=$1 } END { print a }')
@@ -566,7 +614,7 @@ znvm() {
 			return $?
 			;;
 		'ls')
-			_znvm_list_installed_versions | awk 'NF >= 9 {print $9" "$10" "$11}' | sort -V
+			_znvm_list_installed_versions | awk 'NF >= 9 {print $9" "$10" "$11}' | _znvm_sort_versions || return 1
 			;;
 		'ls-remote')
 			_znvm_list_remote_versions
